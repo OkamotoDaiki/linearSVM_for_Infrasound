@@ -61,7 +61,7 @@ def GetMultiFolder(fpath, vol_place, obs_place):
     return Investigate_folder
 
 
-def GetAllMultiFolder(fpath):
+def get_all_multi_folder(fpath):
     """
     Get specified multi folder.
     """

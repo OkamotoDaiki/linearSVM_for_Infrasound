@@ -3,7 +3,8 @@ import os
 import shutil
 import glob
 import sys
-import OperateFpath
+from subscript import operate_fpath
+import json
 
 """
 write directory structure.
@@ -16,7 +17,7 @@ write directory structure.
 └ f1
 """
 
-def ReadCSV(csv_fpath):
+def read_csv(csv_fpath):
     """
     Read csv. Transform pd type to dictionary type. Output dictionary type.
     """
@@ -29,7 +30,7 @@ def ReadCSV(csv_fpath):
     return data_dic
 
 
-def ReadPlaceName(data_dic):
+def read_place_name(data_dic):
     """
     Return place names for csv data.
     """
@@ -46,11 +47,11 @@ def ReadPlaceName(data_dic):
         return 0
 
 
-def CompilePlaceData(target_place_name, data_dics):
+def compile_place_data(target_place_name, data_dics):
     """
     Compile data and threshold magnitude against target place name. 
     """
-    def GetTargetColumnNumber(target_place_name, data_dic):
+    def get_target_column_number(target_place_name, data_dic):
         """
         find column number being target place name.
         """
@@ -76,7 +77,7 @@ def CompilePlaceData(target_place_name, data_dics):
     all_data = []
     
     for threshold_mag, data_dic in data_dics.items():
-        get_column_number = GetTargetColumnNumber(target_place_name, data_dic)
+        get_column_number = get_target_column_number(target_place_name, data_dic)
         if get_column_number != -1:
             column_data = []
             column_data.append(threshold_mag)
@@ -98,7 +99,7 @@ def CompilePlaceData(target_place_name, data_dics):
     return all_data
 
 
-def SortCSVandMag(csv_list):
+def sort_csv_and_mag(csv_list):
     """
     Sort csv list for threshold magnitude.
     """
@@ -117,7 +118,7 @@ def SortCSVandMag(csv_list):
     return sort_csv_fpath
 
 
-def WriteCSV(data, fname, header):
+def write_csv(data, fname, header):
     """
     Write CSV using header and data for pandas type.
     """
@@ -128,9 +129,13 @@ def WriteCSV(data, fname, header):
 
 
 def main():
+    # JSONファイルを読み込む
+    with open('./script/config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
     header = ["threshold_magnitude", "number_of_dataset", "score_mean", "score_std_error"]
     #read csv and generate folder for saving new csv.
-    save_place_csv_fpath = "./output_csv_place"
+    save_place_csv_fpath = config["output_csv_place"]
 
     try:
         shutil.rmtree(save_place_csv_fpath)
@@ -138,31 +143,30 @@ def main():
     except FileNotFoundError:
         os.mkdir(save_place_csv_fpath)
 
-    read_score_csv_fpath = "./output_csv_against_mag"
-    read_score_folders = OperateFpath.GetAllMultiFolder(read_score_csv_fpath)
+    #ファイルの読み込み
+    read_score_csv_fpath = config["input_output_csv_against_mag"]
+    read_score_folders = operate_fpath.get_all_multi_folder(read_score_csv_fpath)
 
     for read_score_folder in read_score_folders:
-        print(read_score_folder)
         save_score_fpath = save_place_csv_fpath + "/" + read_score_folder
         os.mkdir(save_score_fpath)
 
         read_feature_mode_fpath = read_score_csv_fpath + "/" + read_score_folder
-        read_feature_mode_folders = OperateFpath.GetAllMultiFolder(read_feature_mode_fpath)
+        read_feature_mode_folders = operate_fpath.get_all_multi_folder(read_feature_mode_fpath)
         for read_feature_mode_folder in read_feature_mode_folders:
-            print(read_feature_mode_folder)
             save_feature_mode_fpath = save_score_fpath + "/" + read_feature_mode_folder
             os.mkdir(save_feature_mode_fpath)
 
             read_csv_fpath = read_feature_mode_fpath + "/" + read_feature_mode_folder + "/*.csv"
             before_csv_list = glob.glob(read_csv_fpath)
             #edit
-            csv_mag_dic = SortCSVandMag(before_csv_list)
+            csv_mag_dic = sort_csv_and_mag(before_csv_list)
             data_dics = {}
             for csv_fpath, threshold_mag in csv_mag_dic.items():
-                data_dic = ReadCSV(csv_fpath)
+                data_dic = read_csv(csv_fpath)
                 #search threshold 0 and generate place folder
                 if threshold_mag == 0.0:
-                    first_place_names = ReadPlaceName(data_dic)
+                    first_place_names = read_place_name(data_dic)
                 else:
                     pass            
                 data_dics[threshold_mag] = data_dic
@@ -170,9 +174,9 @@ def main():
 
             for target_place_name in first_place_names:
                 save_csv_fpath = save_feature_mode_fpath
-                write_data = CompilePlaceData(target_place_name, data_dics)
+                write_data = compile_place_data(target_place_name, data_dics)
                 save_name_fpath = save_csv_fpath + "/" + target_place_name + "_" + read_score_folder + "_" + read_feature_mode_folder + ".csv"
-                WriteCSV(write_data, save_name_fpath, header)
+                write_csv(write_data, save_name_fpath, header)
     return 0
 
 if __name__=="__main__":

@@ -1,4 +1,4 @@
-1. linearSVM.py
+1. (test_)linear_svm_fo_const.py
 do SVM with fo const. output accuracy, precision, recall, f-1 value.
 
 file structure
@@ -33,10 +33,10 @@ file structure
 „¥recall
 „¤f1
 
-2. Copy_PerformanceValueAgainsMag.py
+2. copy_performance_value_against_mag.py
 Collect performance evaluation values agains magnitude from "output_csv" folder.
 output ./output_csv_against_mag
 
 
-3. PerformanceValueAgainstMag.py -> OrganizeFile_forPlot.py -> plot_performance_value_against_mag.py
+3. performance_value_against_mag.py -> OrganizeFile_forPlot.py -> plot_performance_value_against_mag.py
 Write csv collected performance evaluation values agains magnitude and number of dataset being "output_csv_against_mag".

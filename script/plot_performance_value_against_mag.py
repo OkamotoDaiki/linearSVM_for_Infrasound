@@ -2,17 +2,22 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
-import OperateFpath
+from subscript import operate_fpath
 import glob
 import sys
 import shutil
 import os
+import json
 
-Vaxis_min = 0
-Vaxis_max = 1.05
+# JSONファイルを読み込む
+with open('./script/config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+Vaxis_min = config["Vaxis_min"]
+Vaxis_max = config["Vaxis_max"]
 
 
-def ExtractData(df):
+def extract_data(df):
     """
     Extract data from data frame of pandas for data against threshold magnitude.
     """
@@ -33,7 +38,7 @@ def ExtractData(df):
     return data
 
 
-def ScoreName(csv_fpath):
+def get_score_name(csv_fpath):
     print(csv_fpath)
     csv_fname = csv_fpath.split("/")[-1]
     if csv_fname.split("_")[-2] == "and":
@@ -43,7 +48,7 @@ def ScoreName(csv_fpath):
     return score_name
 
 
-def OrganizePlotData(plot_data):
+def organize_plot_data(plot_data):
     ornot_count = 0
     input_plot_data = {}
 
@@ -69,7 +74,7 @@ def OrganizePlotData(plot_data):
     return input_plot_data
 
 
-def GenerateSavePNG(save_fpath, feature_mode_folders):
+def generate_save_png(save_fpath, feature_mode_folders):
     try:
         shutil.rmtree(save_fpath)
         os.mkdir(save_fpath)
@@ -83,8 +88,8 @@ def GenerateSavePNG(save_fpath, feature_mode_folders):
     return 0
 
 
-def PlotGraph(fpath, input_plot_data):
-    def DecideMarkerType(score_name):
+def plot_graph(fpath, input_plot_data):
+    def decide_marker_type(score_name):
         if score_name == "accuracy":
             marker = "o"
         elif score_name == "precision":
@@ -98,7 +103,7 @@ def PlotGraph(fpath, input_plot_data):
             sys.exit()
         return marker
 
-    def DecideLineType(score_name):
+    def decide_line_type(score_name):
         if score_name == "accuracy":
             linestyle = "-"
         elif score_name == "precision":
@@ -126,8 +131,8 @@ def PlotGraph(fpath, input_plot_data):
     for axis_name, score_and_data in input_plot_data.items():
         if axis_name == "Vaxis":
             for score_name, data_and_name in score_and_data.items():
-                marker = DecideMarkerType(score_name)
-                linestyle = DecideLineType(score_name)
+                marker = decide_marker_type(score_name)
+                linestyle = decide_line_type(score_name)
                 for data_name, data in data_and_name.items():
                     #print(data)
                     Vaxis_data = data
@@ -145,29 +150,30 @@ def PlotGraph(fpath, input_plot_data):
     print("save : {}".format(fpath))
     return 0
 
-def main():
-    read_fpath = "./output_plot_data"
-    save_fpath = "./png_files"
 
-    feature_mode_folders = OperateFpath.GetAllMultiFolder(read_fpath)
-    GenerateSavePNG(save_fpath, feature_mode_folders)
+def main():
+    read_fpath = config["input_output_plot_data"]
+    save_fpath = config["output_png_files"]
+
+    feature_mode_folders = operate_fpath.get_all_multi_folder(read_fpath)
+    generate_save_png(save_fpath, feature_mode_folders)
 
     for feature_mode_folder in feature_mode_folders:
         feature_mode_fpath = read_fpath + "/" + feature_mode_folder
-        place_names = OperateFpath.GetAllMultiFolder(feature_mode_fpath)
+        place_names = operate_fpath.get_all_multi_folder(feature_mode_fpath)
         for place_name in place_names:
             place_name_fpath = feature_mode_fpath + "/" + place_name
 
             plot_data = {}
             csv_list = glob.glob(place_name_fpath + "/*.csv")
             for csv_fpath in csv_list:
-                score_name = ScoreName(csv_fpath)
+                score_name = get_score_name(csv_fpath)
                 df = pd.read_csv(csv_fpath)
-                read_data = ExtractData(df)
+                read_data = extract_data(df)
                 plot_data[score_name] = read_data
-            input_plot_data = OrganizePlotData(plot_data)
+            input_plot_data = organize_plot_data(plot_data)
             save_png_fpath = save_fpath + "/" + feature_mode_folder + "/" + place_name + "_" + feature_mode_folder + "_performance_value_agaist_mag.png"
-            PlotGraph(save_png_fpath, input_plot_data)
+            plot_graph(save_png_fpath, input_plot_data)
     return 0
 
 

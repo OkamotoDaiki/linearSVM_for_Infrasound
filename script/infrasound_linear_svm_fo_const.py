@@ -1,12 +1,11 @@
 import pickle
 import numpy as np
 import time
-import pandas as pd
-import sys
 import os
 import glob
 import shutil
-import OperateFpath
+from subscript import operate_fpath
+import json
 
 class SVMclass():
     def __init__(self, training_list, label_list, split_number):
@@ -57,69 +56,13 @@ class SVMclass():
         typeofClassifier = "linearSVM"   
 
         return score_testset, typeofClassifier, scores_mean, scores_std
-
-
-    def svm(self, training_list,label_list,C_value,g_value):
-        #テストデータの作成 
-        from sklearn.model_selection import train_test_split
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            np.array(training_list), np.array(label_list), random_state=0
-        )
-        
-        #ただのテスト
-        print(X_train.shape)
-        print(y_train.shape)
-
-        #前処理なし,SVM
-        from sklearn.svm import SVC
-        svc = SVC(C=C_value,gamma=g_value)
-        svc.fit(X_train, y_train)
-        score_trainingset = svc.score(X_train, y_train)
-        score_testset = svc.score(X_test, y_test)
-        print("Accuracy on training set: {:.3f}".format(score_trainingset))
-        print("Accuracy on test set: {:.3f}".format(score_testset))
-
-        #MinMaxscaler
-        from sklearn.preprocessing import MinMaxScaler
-        scaler = MinMaxScaler()
-        scaler.fit(X_train)
-        X_train_scaled = scaler.transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
-
-        #svc = SVC(C=C_value,gamma=g_value)
-        svc.fit(X_train_scaled, y_train)
-        score_trainingset_MinMax = svc.score(X_train, y_train)
-        score_testset_MinMax = svc.score(X_test, y_test)
-
-        print("MinMax Scaled Accuracy on training set: {:.3f}".format(score_trainingset_MinMax))
-        print("MinMax Scaled Accuracy on test set: {:.3f}".format(score_testset_MinMax))
-
-        #StandardScaler
-        from sklearn.preprocessing import StandardScaler
-        scaler = StandardScaler()
-        scaler.fit(X_train)
-        X_train_scaled = scaler.transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
-
-        #scalecheck(X_train_scaled)
-        #scalecheck(X_test_scaled)
-
-        svc.fit(X_train_scaled, y_train)
-        score_trainingset_standard = svc.score(X_train, y_train)
-        score_testset_standard = svc.score(X_test, y_test)
-
-        print("standard Scaled Accuracy on training set: {:.3f}".format(score_trainingset_standard))
-        print("standard Scaled Accuracy on test set: {:.3f}".format(score_testset_standard))
-
-        return [C_value, g_value, score_trainingset, score_testset, score_trainingset_MinMax, score_testset_MinMax, score_trainingset_standard, score_testset_standard]
-
+    
 
 class Preprocessing():
     def __init__(self,fname):
         self.fname = fname
 
-    def GetData_fromPickle(self):
+    def get_data_from_pickle(self):
         """
         Get training data and label data from Pickle.
         """
@@ -133,41 +76,9 @@ class Preprocessing():
                     training_data = data_div
                 count += 1
         return label, training_data
-    
-    def GenerateMultiClassNumber(self):
-        """
-        Generate list for number of class.
-        """
-        def SepSVM(training_list,label_list,number_list):
-            """
-            Spectify number. Append traning data and label data to list.
-            """
-            training_list, label_list = self.GetMLData_fromPickle()
-            new_training_list = []
-            new_label_list = []
-            count = 0
-            for number in number_list:
-                for i in label_list:
-                    if number == i:
-                        new_training_list.append(training_list[count])
-                        new_label_list.append(label_list[count])
-                        count += 1
-            return new_training_list, new_label_list
 
 
-        number = max(label_list)
-        number_list = []
-
-        for i in range(number+1):
-            #時間の計測
-            number_list.append(i)
-            if len(number_list) != 1:
-                print("Run {} classification.".format(number_list))
-                new_training_list, new_label_list = SepSVM(training_list,label_list,number_list)
-        return new_training_list, new_label_list
-
-
-def WriteCSV(data, fname, header):
+def write_csv(data, fname, header):
     import pandas as pd
     df = pd.DataFrame(data, columns=header)
     df.to_csv(fname)
@@ -175,25 +86,17 @@ def WriteCSV(data, fname, header):
     return 0
 
 
-def FindNaN_mfcc(data):
-    count1 = 0
-    for i in data:
-        count1 += 1
-        count2 = 0
-        for j in i:
-            if str(j) == 'NaN':
-                print('Find NaN. number of ({},{})'.format(count1,count2))
-                break
-    return 0
+def main():
+    # JSONファイルを読み込む
+    with open('./script/config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
 
-def test_main():
     #時間を計測
     start = time.time()
-    #fnames = "../mfcc_script/mfcc_number_random_*.pkl"
-    split_number = 5
-    output_csv_fpath = "./output_csv"
-    feature_mode_fpath = "../pkl_file"
-    feature_mode_list = OperateFpath.GetAllMultiFolder(feature_mode_fpath)
+    split_number = config["split_number"]
+    output_csv_fpath = config["output_csv_fpath"]
+    feature_mode_fpath = config["feature_mode_fpath"]
+    feature_mode_list = operate_fpath.get_all_multi_folder(feature_mode_fpath)
 
     score_funcs = [
         'accuracy',
@@ -213,12 +116,12 @@ def test_main():
         os.mkdir(generate_scorefunc_fpath)
         for feature_mode in feature_mode_list:
             threshold_fpath = feature_mode_fpath + "/" + feature_mode
-            threshold_variable_list = OperateFpath.GetAllMultiFolder(threshold_fpath)
+            threshold_variable_list = operate_fpath.get_all_multi_folder(threshold_fpath)
             generate_feature_mode_fpath = generate_scorefunc_fpath + "/" + feature_mode
             os.mkdir(generate_feature_mode_fpath)
             for threshold_variable in threshold_variable_list:
                 place_fpath = threshold_fpath + "/" + threshold_variable
-                place_names = OperateFpath.GetAllMultiFolder(place_fpath)
+                place_names = operate_fpath.get_all_multi_folder(place_fpath)
                 generate_threshold_fpath = generate_feature_mode_fpath + "/" + threshold_variable
                 os.mkdir(generate_threshold_fpath)
                 #Generate csv
@@ -233,7 +136,7 @@ def test_main():
                     for fname in all_pkl_files:
                         #SVMの処理
                         Preprocessing_obj = Preprocessing(fname)
-                        label, traning_data = Preprocessing_obj.GetData_fromPickle()
+                        label, traning_data = Preprocessing_obj.get_data_from_pickle()
                         label_list.append(label)
                         training_data_list.append(traning_data)
                     newtime = time.time() #線形SVMの時間計測の開始
@@ -255,10 +158,10 @@ def test_main():
 
                 fname_csv = generate_threshold_fpath + "/" + score_func + "_" + feature_mode + "_" + threshold_variable + "_" + "fo_const.csv"
                 header = ["place_name", "classifier", "number_of_dataset", "score_mean", "score_std_error","elapsed_time[s]"]
-                WriteCSV(all_data, fname_csv, header)
+                write_csv(all_data, fname_csv, header)
     elapsed_time = time.time() - start
     print("all elapsed_time:{}[sec],{}[min],{}[hour]\n".format(round(elapsed_time,2),round(elapsed_time/60,2), round(elapsed_time/(60*60),2)))
     return 0
 
 if __name__ == '__main__':
-    test_main()
+    main()
