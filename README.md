@@ -5,37 +5,37 @@ Run linearSVM with infrasound data. Output accuracy, precision, recall, f-1 valu
 
 1. linear_svm_fo_const.py
 
-file structure
--input file
+file structure  
+-input file  
+  
+../pkl_file  
+├threshold_magnitude folder  
+│ └ place/  
+│	└ *.pkl  
+│  
+├threshold_magnitude folder  
+.  
+.  
+.  
+└threshold_magnitude folder  
 
-../pkl_file
-├threshold_magnitude folder
-│ └ place/
-│	└ *.pkl
-│
-├threshold_magnitude folder
-.
-.
-.
-└threshold_magnitude folder
-
--output csv file
-./result/output_csv
-├accuracy
-│ ├MFCC
-│ │  ├threshold_magnitude folder
-│ │  │└ *.csv
-│ │  ├threshold_magnitude folder
-.  .   .
-.  .   .
-.  .   .
-│ │  └threshold_magnitude folder
-│ ├delta-ceps
-│ └mfcc_and_delta-ceps
-│
-├precision
-├recall
-└f1
+-output csv file  
+./result/output_csv  
+├accuracy  
+│ ├MFCC  
+│ │  ├threshold_magnitude folder  
+│ │  │└ *.csv  
+│ │  ├threshold_magnitude folder  
+.  .   .  
+.  .   .  
+.  .   .  
+│ │  └threshold_magnitude folder  
+│ ├delta-ceps  
+│ └mfcc_and_delta-ceps  
+│  
+├precision  
+├recall  
+└f1  
 
 2. copy_performance_value_against_mag.py
 Collect performance evaluation values agains magnitude from "output_csv" folder.
