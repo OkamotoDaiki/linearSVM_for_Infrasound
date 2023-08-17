@@ -1,15 +1,15 @@
 {
     "split_number": 5,
-    "output_csv_fpath": "./result/output_csv",
-    "feature_mode_fpath": "./input/pkl_file/",
+    "output_csv_fpath": "./temp/output_csv",
+    "feature_mode_fpath": "./input/pkl_file",
     "output_csv_against_mag": "./result/output_csv_against_mag",
-    "input_output_csv_fpath": "./result/output_csv",
+    "input_output_csv_fpath": "./temp/output_csv",
     "output_csv_place": "./result/output_csv_place",
     "input_output_csv_against_mag": "./result/output_csv_against_mag",
     "input_output_csv_place": "./result/output_csv_place",
     "output_plot_data": "./result/output_plot_data",
     "input_output_plot_data": "./result/output_plot_data",
-    "output_png_files": "./result/png_files",
+    "output_png_files": "./result/plot_evaluation",
     "Vaxis_min": 0,
     "Vaxis_max": 1.05
 }
